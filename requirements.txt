@@ -2,4 +2,3 @@ Flask==2.3.2
 Flask-Session==0.5.0
 pymysql
 selenium
-unittest
