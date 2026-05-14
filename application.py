@@ -43,20 +43,26 @@ def get_db_connection():
                 print(f"Failed to connect to database after {max_retries} attempts")
                 raise
 
-# Initialize database connection
-db_conn = get_db_connection()
+# Initialize database when not running import-only unit tests on the CI host.
+# Jenkins runs unittest on the VM: hostname "db" only exists on the Docker Compose network.
+_skip_db_at_import = os.environ.get("SKIP_DB_AT_IMPORT", "").strip().lower() in ("1", "true", "yes")
+db_conn = None
+cursor = None
 
-cursor = db_conn.cursor()
-
-# Create tables
-cursor.execute("""
+if not _skip_db_at_import:
+    try:
+        db_conn = get_db_connection()
+    except Exception:
+        db_conn = None
+    if db_conn is not None:
+        cursor = db_conn.cursor()
+        cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) PRIMARY KEY,
     password VARCHAR(100) NOT NULL
 )
 """)
-
-cursor.execute("""
+        cursor.execute("""
 CREATE TABLE IF NOT EXISTS tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50),
@@ -68,8 +74,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     FOREIGN KEY (username) REFERENCES users(username)
 )
 """)
-
-db_conn.commit()
+        db_conn.commit()
 
 # ===================== DASHBOARD HTML =====================
 dashboard_html = """
@@ -460,7 +465,7 @@ welcome_html = """
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>To-Do List App</title>
+<title>TaskMaster - Home</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
