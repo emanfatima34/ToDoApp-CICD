@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "taskmaster-app"
+        IMAGE_NAME = "mytodoapp"
+        CONTAINER_NAME = "mytodoapp_container"
     }
 
     stages {
@@ -15,8 +16,10 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'python3 -m pip install --upgrade pip'
-                sh 'pip install -r requirements.txt'
+                sh '''
+                python3 -m pip install --upgrade pip
+                pip install -r requirements.txt
+                '''
             }
         }
 
@@ -35,9 +38,10 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 sh '''
-                docker stop taskmaster || true
-                docker rm taskmaster || true
-                docker run -d --name taskmaster -p 5000:5000 $IMAGE_NAME
+                docker stop $CONTAINER_NAME || true
+                docker rm $CONTAINER_NAME || true
+                docker run -d --name $CONTAINER_NAME -p 5000:5000 $IMAGE_NAME
+                sleep 5
                 '''
             }
         }
@@ -55,11 +59,11 @@ pipeline {
         }
 
         success {
-            echo "CI/CD Pipeline SUCCESS "
+            echo "CI/CD Pipeline SUCCESS"
         }
 
         failure {
-            echo "Pipeline FAILED "
+            echo "Pipeline FAILED"
         }
     }
 }
