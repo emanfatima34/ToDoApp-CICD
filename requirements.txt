@@ -1,4 +1,6 @@
 Flask==2.3.2
 Flask-Session==0.5.0
+# Flask 2.3.x test client expects werkzeug.__version__; Werkzeug 3 removed it.
+Werkzeug>=2.3.3,<3
 pymysql
 selenium

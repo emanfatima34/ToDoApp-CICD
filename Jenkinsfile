@@ -33,15 +33,15 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker compose build'
+                sh 'bash scripts/compose.sh build'
             }
         }
 
         stage('Run Docker Container') {
             steps {
                 sh '''
-                    docker compose down || true
-                    docker compose up -d
+                    bash scripts/compose.sh down || true
+                    bash scripts/compose.sh up -d
                     READY=0
                     for i in $(seq 1 30); do
                       if python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/', timeout=5)" 2>/dev/null; then
@@ -53,7 +53,7 @@ pipeline {
                     done
                     if [ "$READY" != "1" ]; then
                       echo "App did not become ready on port 5000"
-                      docker compose logs --no-color || true
+                      bash scripts/compose.sh logs --no-color || true
                       exit 1
                     fi
                     echo "TaskMaster is responding."
@@ -74,7 +74,7 @@ pipeline {
     post {
         always {
             echo "Pipeline finished"
-            sh 'docker compose down || true'
+            sh 'bash scripts/compose.sh down || true'
         }
 
         success {
